@@ -587,13 +587,13 @@ meta def to_generalize (eliminee : expr) : generalization_mode → tactic name_s
   tgt ← target,
   let tgt_dependencies := tgt.local_unique_names,
   eliminee_type ← infer_type eliminee,
-  eliminee_dependencies ← dependencies_of_local eliminee,
-  fixed_dependencies ← (eliminee :: fixed).mmap dependencies_of_local,
+  eliminee_dependencies ← dependencies_of_hyp_inclusive' eliminee,
+  fixed_dependencies ← (eliminee :: fixed).mmap dependencies_of_hyp_inclusive',
   let fixed_dependencies := fixed_dependencies.foldl name_set.union mk_name_set,
   ctx ← revertible_local_context,
   to_revert ← ctx.mmap_filter $ λ h, do {
     -- TODO what about local defs?
-    h_depends_on_eliminee_deps ← local_depends_on_locals h eliminee_dependencies,
+    h_depends_on_eliminee_deps ← hyp_depends_on_locals h eliminee_dependencies,
     let h_name := h.local_uniq_name,
     let rev :=
       ¬ fixed_dependencies.contains h_name ∧
@@ -655,14 +655,14 @@ focus1 $ do
   let js := eliminee_index_args,
   ctx ← revertible_local_context,
   tgt ← target,
-  eliminee_deps ← dependencies_of_local eliminee,
+  eliminee_deps ← dependencies_of_hyp_inclusive' eliminee,
 
   -- Revert the hypotheses which depend on the index args or the eliminee. We
   -- exclude dependencies of the eliminee because we can't replace their index
   -- occurrences anyway when we apply the recursor.
   relevant_ctx ← ctx.mfilter $ λ h, do {
     let dep_of_eliminee := eliminee_deps.contains h.local_uniq_name,
-    dep_on_eliminee ← local_depends_on_local h eliminee,
+    dep_on_eliminee ← hyp_depends_on_local h eliminee,
     H ← infer_type h,
     dep_of_index ← js.many $ λ j, kdepends_on H j,
     -- TODO local defs
@@ -685,10 +685,7 @@ focus1 $ do
   let js_ks := js.zip ks,
 
   -- Replace the index args in the relevant context.
-  new_ctx ← relevant_ctx.mmap $ λ ⟨h, H⟩, do {
-    H ← js_ks.mfoldr (λ ⟨j, k⟩ h, kreplace h j k) H,
-    pure $ local_const h.local_uniq_name h.local_pp_name h.binding_info H
-  },
+  new_ctx ← relevant_ctx.mmap $ λ h, js_ks.mfoldr (λ ⟨j, k⟩ h, kreplace h j k) h,
 
   -- Replace the index args in the eliminee
   let new_eliminee_type := eliminee_head.mk_app (eliminee_param_args ++ ks),

@@ -179,76 +179,207 @@ meta def open_n_pis_metas' :
   pure ((m, nam, bi) :: ms, rest)
 | e (n + 1) := fail! "expected an expression starting with a Π, but got: {e}"
 
+/--
+Update the type of a local constant or metavariable. For local constants and
+metavariables obtained via, for example, `tactic.get_local`, the type stored in
+the expression is not necessarily the same as the type returned by `infer_type`.
+This tactic, given a local constant or metavariable, updates the stored type to
+match the output of `infer_type`. If the input is not a local constant or
+metavariable, `update_type` does nothing.
+-/
+meta def update_type : expr → tactic expr
+| e@(local_const ppname uname binfo _) :=
+  local_const ppname uname binfo <$> infer_type e
+| e@(mvar ppname uname _) :=
+  mvar ppname uname <$> infer_type e
+| e := pure e
 
-meta def type_depends_on_locals (h : expr) (ns : name_set) : tactic bool := do
+/--
+Given a hypothesis (local constant) `h` and a local constant `i`, we say that
+`h` depends on `i` iff
+
+- `i` appears in the type of `h` or
+- `h` is a local definition and `i` appears in its body.
+
+We say that `h` inclusively depends on `i` iff `h` depends on `i` or `h = i`
+(so inclusive dependency is the reflexive closure of regular dependency).
+
+For example, consider the following context:
+
+```lean
+P : ∀ n, fin n → Prop
+n : ℕ
+m : ℕ := n
+f : fin m
+h : P m f
+```
+
+Here, `m` depends on `n`; `f` depends on `m`; `h` depends on `P`, `m` and `f`.
+Note that `f` and `h` do not depend on `n`, so the depends-on relation is not
+transitive. `h` inclusively depends on `h`, `P`, `m` and `f`.
+
+We also say that `m` is a dependency of `f` and `f` a reverse dependency of `m`.
+Note that the Lean standard library sometimes uses these terms differently:
+`kdependencies`, confusingly, computes the reverse dependencies of an
+expression.
+-/
+library_note "dependencies of hypotheses"
+
+
+/--
+`type_has_local_in h ns` returns true iff the type of `h` contains a local
+constant whose unique name appears in `ns`.
+-/
+meta def type_has_local_in (h : expr) (ns : name_set) : tactic bool := do
   h_type ← infer_type h,
   pure $ h_type.has_local_in ns
 
-meta def local_def_depends_on_locals (h : expr) (ns : name_set) : tactic bool := do
+/--
+`local_def_value_has_local_in h ns` returns true iff `h` is a local definition
+whose body contains a local constant whose unique name appears in `ns`.
+-/
+meta def local_def_value_has_local_in (h : expr) (ns : name_set) : tactic bool := do
   (some h_val) ← try_core $ local_def_value h | pure ff,
   pure $ h_val.has_local_in ns
 
 /--
-Test whether `h` depends on any of the hypotheses in the set of unique names
-`ns`. This is the case if `h` is in `ns`, or if any of the `ns` appear in `h`'s
-type or body.
+Given a hypothesis `h`, `hyp_depends_on_locals h ns` returns true iff `h`
+depends on a local constant whose unique name appears in `ns`. See note
+[dependencies of hypotheses].
 -/
-meta def local_depends_on_locals (h : expr) (ns : name_set) : tactic bool :=
+meta def hyp_depends_on_locals (h : expr) (ns : name_set) : tactic bool :=
 list.mbor
-  [ pure $ ns.contains h.local_uniq_name
-  , type_depends_on_locals h ns
-  , local_def_depends_on_locals h ns
-  ]
-
-meta def local_depends_on_local (h i : expr) : tactic bool :=
-local_depends_on_locals h (mk_name_set.insert i.local_uniq_name)
+  [ type_has_local_in h ns,
+    local_def_value_has_local_in h ns ]
 
 /--
-The set of unique names of hypotheses which `h` depends on (including `h`
-itself). `h` must be a local constant.
+Given a hypothesis `h`, `hyp_depends_on_locals h ns` returns true iff `h`
+inclusively depends on a local constant whose unique name appears in `ns`.
+See note [dependencies of hypotheses].
 -/
-meta def dependencies_of_local (h : expr) : tactic name_set := do
-  let deps := mk_name_set.insert h.local_uniq_name,
+meta def hyp_depends_on_locals_inclusive (h : expr) (ns : name_set) : tactic bool :=
+list.mbor
+  [ pure $ ns.contains h.local_uniq_name,
+    hyp_depends_on_locals h ns ]
+
+/--
+Given a hypothesis `h` and local constant `i`, `hyp_depends_on_local h i`
+checks whether `h` depends on `i`. See note [dependencies of hypotheses].
+-/
+meta def hyp_depends_on_local (h i : expr) : tactic bool :=
+hyp_depends_on_locals h (mk_name_set.insert i.local_uniq_name)
+
+/--
+Given a hypothesis `h` and local constant `i`, `hyp_depends_on_local h i`
+checks whether `h` inclusively depends on `i`. See note
+[dependencies of hypotheses].
+-/
+meta def hyp_depends_on_local_inclusive (h i : expr) : tactic bool :=
+hyp_depends_on_locals_inclusive h (mk_name_set.insert i.local_uniq_name)
+
+/--
+Given a hypothesis `h`, `dependencies_of_hyp' h` returns the set of unique names
+of the local constants which `h` depends on. See note
+[dependencies of hypotheses].
+-/
+meta def dependencies_of_hyp' (h : expr) : tactic name_set := do
   t ← infer_type h,
-  let deps := deps.union t.local_unique_names,
+  let deps := t.local_unique_names,
   (some val) ← try_core $ local_def_value h | pure deps,
   let deps := deps.union val.local_unique_names,
   pure deps
 
 /--
-The dependency closure of the local constants whose unique names appear in `hs`.
-This is the set of local constants which depend on any of the `hs` (including
-the `hs` themselves).
+Given a hypothesis `h`, `dependencies_of_hyp h` returns the hypotheses which `h`
+depends on. See note [dependencies of hypotheses].
 -/
-meta def dependency_closure' (hs : name_set) : tactic (list expr) := do
-  ctx ← local_context,
-  ctx.mfilter $ λ h, local_depends_on_locals h hs
+meta def dependencies_of_hyp (h : expr) : tactic (list expr) := do
+  ns ← dependencies_of_hyp' h,
+  ns.to_list.mmap get_local
 
 /--
-The dependency closure of the local constants in `hs`. See `dependency_closure'`.
+Given a hypothesis `h`, `dependencies_of_hyp_inclusive' h` returns the set of
+unique names of the local constants which `h` inclusively depends on. See note
+[dependencies of hypotheses].
 -/
-meta def dependency_closure (hs : list expr) : tactic (list expr) :=
-dependency_closure' $ name_set.of_list $ hs.map expr.local_uniq_name
+meta def dependencies_of_hyp_inclusive' (h : expr) : tactic name_set := do
+  deps ← dependencies_of_hyp' h,
+  pure $ deps.insert h.local_uniq_name
+
+/--
+Given a hypothesis `h`, `dependencies_of_hyp_inclusive' h` returns the
+hypotheses which `h` inclusively depends on. See note
+[dependencies of hypotheses].
+-/
+meta def dependencies_of_hyp_inclusive (h : expr) : tactic (list expr) := do
+  ns ← dependencies_of_hyp_inclusive' h,
+  ns.to_list.mmap get_local
+
+/--
+Given a set `ns` of unique names of hypotheses,
+`reverse_dependencies_of_hyps' hs` returns those hypotheses which depend on any
+of the `hs`, excluding the `hs` themselves. See note
+[dependencies of hypotheses].
+-/
+meta def reverse_dependencies_of_hyps' (hs : name_set) : tactic (list expr) := do
+  ctx ← local_context,
+  ctx.mfilter $ λ h, list.mband
+    [ pure $ ¬ hs.contains h.local_uniq_name,
+      hyp_depends_on_locals h hs ]
+
+/--
+`reverse_dependencies_of_hyps hs` returns those hypotheses which depend on any
+of the hypotheses `hs`, excluding the `hs` themselves.
+-/
+meta def reverse_dependencies_of_hyps (hs : list expr) : tactic (list expr) :=
+reverse_dependencies_of_hyps' $
+  hs.foldl (λ ns h, ns.insert h.local_uniq_name) mk_name_set
+
+/--
+Given a set `ns` of unique names of hypotheses,
+`reverse_dependencies_of_hyps_inclusive' hs` returns those hypotheses which
+inclusively depend on any of the `hs`. See note [dependencies of hypotheses].
+
+This is the 'revert closure' of `hs`: to revert the `hs`, we must also revert
+their reverse dependencies.
+-/
+meta def reverse_dependencies_of_hyps_inclusive' (hs : name_set) :
+  tactic (list expr) := do
+  ctx ← local_context,
+  ctx.mfilter $ λ h, hyp_depends_on_locals_inclusive h hs
+
+/--
+`reverse_dependencies_of_hyps_inclusive hs` returns those hypotheses which
+inclusively depend on any of the hypotheses `hs`. See note
+[dependencies of hypotheses].
+
+This is the 'revert closure' of `hs`: to revert the `hs`, we must also revert
+their reverse dependencies.
+-/
+meta def reverse_dependencies_of_hyps_inclusive (hs : list expr) :
+  tactic (list expr) := do
+reverse_dependencies_of_hyps_inclusive' $
+  hs.foldl (λ ns h, ns.insert h.local_uniq_name) mk_name_set
 
 /--
 Revert the local constants whose unique names appear in `hs`, as well as any
 hypotheses that depend on them. Returns the number of hypotheses that were
-reverted and a list containing these hypotheses and their types.
+reverted and a list containing these hypotheses. The returned hypotheses are
+guaranteed to store the correct type; see `tactic.update_type`.
 -/
-meta def revert_set (hs : name_set) : tactic (ℕ × list (expr × expr)) := do
-  to_revert ← dependency_closure' hs,
-  to_revert_with_types ← to_revert.mmap $ λ h, do {
-    T ← infer_type h,
-    pure (h, T)
-  },
+meta def revert_set (hs : name_set) : tactic (ℕ × list expr) := do
+  to_revert ← reverse_dependencies_of_hyps_inclusive' hs,
+  to_revert_with_types ← to_revert.mmap update_type,
   num_reverted ← revert_lst to_revert,
   pure (num_reverted, to_revert_with_types)
 
 /--
 Revert the local constants in `hs`, as well as any hypotheses that depend on
-them. See `revert_lst''`.
+them. Returns the number of hypotheses that were reverted and a list containing
+these hypotheses and their types. The returned hypotheses are
+guaranteed to store the correct type; see `tactic.update_type`.
 -/
-meta def revert_lst' (hs : list expr) : tactic (ℕ × list (expr × expr)) :=
+meta def revert_lst' (hs : list expr) : tactic (ℕ × list expr) :=
 revert_set $ name_set.of_list $ hs.map expr.local_uniq_name
 
 -- TODO the implementation is a bit of an 'orrible hack
