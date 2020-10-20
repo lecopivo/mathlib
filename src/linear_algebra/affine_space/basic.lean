@@ -1484,3 +1484,15 @@ def homothety_affine (c : P1) : k →ᵃ[k] (P1 →ᵃ[k] P1) :=
 rfl
 
 end affine_map
+
+open affine_map
+
+lemma homothety_one_half_comm {k E PE : Type*} [field k] [char_zero k] [add_comm_group E]
+  [semimodule k E] [affine_space E PE] (p₁ p₂ : PE) :
+  homothety p₁ (1/2:k) p₂ = homothety p₂ (1/2:k) p₁ :=
+begin
+  dsimp only [homothety_apply],
+  rw [eq_vadd_iff_vsub_eq, vadd_vsub_assoc, ← neg_vsub_eq_vsub_rev, smul_neg, neg_add_eq_sub,
+    sub_eq_iff_eq_add, ← add_smul],
+  norm_num
+end

@@ -264,7 +264,7 @@ by rwa [←sub_eq_zero, vsub_sub_vsub_cancel_right, vsub_eq_zero_iff_eq] at h
 
 /-- The same point subtracted from two points produces equal results
 if and only if those points are equal. -/
-@[simp] lemma vsub_left_cancel_iff {p1 p2 p : P} : (p1 -ᵥ p) = p2 -ᵥ p ↔ p1 = p2 :=
+@[simp] lemma vsub_left_cancel_iff {p1 p2 : P} (p : P) : (p1 -ᵥ p) = p2 -ᵥ p ↔ p1 = p2 :=
 ⟨vsub_left_cancel, λ h, h ▸ rfl⟩
 
 /-- Subtracting the point `p` is an injective function. -/
@@ -281,7 +281,7 @@ end
 
 /-- Subtracting two points from the same point produces equal results
 if and only if those points are equal. -/
-@[simp] lemma vsub_right_cancel_iff {p1 p2 p : P} : p -ᵥ p1 = p -ᵥ p2 ↔ p1 = p2 :=
+@[simp] lemma vsub_right_cancel_iff {p1 p2 : P} (p : P) : p -ᵥ p1 = p -ᵥ p2 ↔ p1 = p2 :=
 ⟨vsub_right_cancel, λ h, h ▸ rfl⟩
 
 /-- Subtracting a point from the point `p` is an injective
