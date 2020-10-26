@@ -341,7 +341,7 @@ meta def constructor_argument_naming_rule_named : constructor_argument_naming_ru
 let arg_name := i.ainfo.aname in
 let arg_dep := i.ainfo.dependent in
 pure $
-  if ! arg_dep && arg_name.is_likely_generated_name
+  if ! arg_dep && arg_name.is_likely_generated_binder_name
     then []
     else [arg_name]
 

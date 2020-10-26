@@ -42,47 +42,6 @@ def take_lst {α} : list α → list ℕ → list (list α) × list α
   let ⟨xss, rest⟩ := take_lst xs₂ ns in
   (xs₁ :: xss, rest)
 
-def map₂_left' {α β γ} (f : α → option β → γ) : list α → list β → (list γ × list β)
-| [] bs := ([], bs)
-| (a :: as) [] :=
-  let ⟨cs, rest⟩ := map₂_left' as [] in
-  (f a none :: cs, rest)
-| (a :: as) (b :: bs) :=
-  let ⟨cs, rest⟩ := map₂_left' as bs in
-  (f a (some b) :: cs, rest)
-
-def map₂_right' {α β γ} (f : option α → β → γ) (as : list α) (bs : list β) :
-  (list γ × list α) :=
-map₂_left' (flip f) bs as
-
-def zip_left' {α β} : list α → list β → list (α × option β) × list β :=
-map₂_left' (λ a b, (a, b))
-
-def zip_right' {α β} : list α → list β → list (option α × β) × list α :=
-map₂_right' (λ a b, (a, b))
-
-def map₂_left {α β γ} (f : α → option β → γ) : list α → list β → list γ
-| [] _ := []
-| (a :: as) [] := f a none :: map₂_left as []
-| (a :: as) (b :: bs) := f a (some b) :: map₂_left as bs
-
-def map₂_right {α β γ} (f : option α → β → γ) (as : list α) (bs : list β) :
-  list γ :=
-map₂_left (flip f) bs as
-
-def zip_left {α β} : list α → list β → list (α × option β) :=
-map₂_left prod.mk
-
-def zip_right {α β} : list α → list β → list (option α × β) :=
-map₂_right prod.mk
-
-lemma map₂_left_eq_map₂_left' {α β γ} (f : α → option β → γ)
-  : ∀ (as : list α) (bs : list β),
-    map₂_left f as bs = (map₂_left' f as bs).fst
-| [] bs := by simp!
-| (a :: as) [] := by { simp! only [*], cases (map₂_left' f as nil), simp!  }
-| (a :: as) (b :: bs) := by { simp! only [*], cases (map₂_left' f as bs), simp! }
-
 def fill_nones {α} : list (option α) → list α → list α
 | [] _ := []
 | ((some a) :: as) as' := a :: fill_nones as as'
@@ -106,52 +65,6 @@ e.fold mk_name_set $ λ e _ occs,
   end
 
 end expr
-
-
-namespace name
-
-open parser
-
-/--
-After elaboration, Lean does not have non-dependent function types with
-unnamed arguments. This means that for the declaration
-
-```lean
-inductive test : Type :=
-| intro : unit → test
-```
-
-the type of `test.intro` becomes
-
-```lean
-test.intro : ∀ (a : unit), test
-```lean
-
-after elaboration, where `a` is an auto-generated name.
-
-This means that we can't know for sure whether a constructor argument was named
-by the user. Hence the following hack: If an argument is non-dependent *and* its
-name is `a` or `a_n` for some `n ∈ ℕ`, then we assume that this name was
-auto-generated rather than chosen by the user.
--/
-library_note "unnamed constructor arguments"
-
-/-- See [note unnamed constructor arguments]. -/
-meta def likely_generated_name_p : parser unit := do
-  ch 'a',
-  optional (ch '_' *> nat),
-  pure ()
-
-/-- See [note unnamed constructor arguments]. -/
-meta def is_likely_generated_name (n : name) : bool :=
-match n with
-| anonymous := ff
-| mk_numeral _ _ := ff
-| mk_string s anonymous := (likely_generated_name_p.run_string s).is_right
-| mk_string _ _ := ff
-end
-
-end name
 
 
 namespace tactic
