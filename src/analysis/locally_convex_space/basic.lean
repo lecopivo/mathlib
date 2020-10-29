@@ -22,7 +22,7 @@ end seminorm
 
 class locally_convex_space (𝕜 : Type*) (E : Type*) [normed_field 𝕜] [add_comm_group E] [vector_space 𝕜 E] [τ : topological_space E] : Prop :=
   (seminorms_induce_topology : 
-    ∃ (ι : Type*) (seminorms : ι → seminorm 𝕜 E), seminorm.induce_topology seminorms = τ)
+    ∃ (ι : Type) (seminorms : ι → seminorm 𝕜 E), seminorm.induce_topology seminorms = τ)
 
 namespace locally_convex_space
   variables {𝕜 : Type*} (E : Type*)
@@ -52,20 +52,5 @@ section locally_convex_space
 
   instance normed_space.locally_convex_space {U : Type*} [normed_group U] [normed_space 𝕜 U] : locally_convex_space 𝕜 U := sorry
   
-  /- this has trouble working automatically -/
-  -- @[reducible, inline] instance real.locally_convex_space : locally_convex_space ℝ ℝ := normed_space.locally_convex_space
-
-
-  /-- Like `by apply_instance`, but not dependent on the tactic framework. -/
-  @[reducible] def infer {α : Prop} [i : α] : α := i
-
-
-  variables {X : Type*} [add_comm_group X] [vector_space ℝ X] [topological_space X] [locally_convex_space ℝ X]
-
-
-  #check (@infer (locally_convex_space ℝ X) _)
-  #check (@infer (locally_convex_space ℝ (X×X)) _)
-  #check (@infer (locally_convex_space ℝ (X→X)) _)
-
 end locally_convex_space
 
