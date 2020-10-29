@@ -111,7 +111,7 @@ namespace convenient
       @[simp] lemma add_apply  : (f + g) x = f x + g x := rfl
       @[simp] lemma zero_apply : (0 : E⊸F) x = (0 : F) := rfl
       @[simp] lemma neg_apply  : (-f) x = - (f x) := rfl
-      @[simp] lemma smul_apply  : (s • f) x = s • (f x) := rfl
+      @[simp] lemma smul_apply : (s • f) x = s • (f x) := rfl
 
       instance : add_comm_group (E⊸F) :=
         add_comm_group.mk 
@@ -156,12 +156,10 @@ namespace convenient
   
       instance : topological_space (E⊸F) := topological_space.induced (coe : (E⊸F)→(E⟿F)) (by apply_instance)
 
-      instance : locally_convex_space ℝ (E⟿F) := {seminorms_induce_topology := sorry }
+      instance : locally_convex_space ℝ (E⊸F) := {seminorms_induce_topology := sorry }
 
     end topology
 
   end smooth_linear_map
-
-
 
 end convenient

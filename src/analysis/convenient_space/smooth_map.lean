@@ -183,33 +183,6 @@ namespace convenient
       instance : locally_convex_space ℝ (E⟿F) := {seminorms_induce_topology := sorry }
     
     end topology
-
-    section differential
-
-      noncomputable def diff : (E⟿F)⟿(E⟿(E⟿F)) := 
-        ⟨λ f, ⟨λ x, ⟨λ dx, smooth_curve.deriv ⟨f ∘ (smooth_curve.line x dx), begin apply f.2, tauto, end⟩ 0,
-          /- smoothness in dx -/ sorry⟩, 
-          /- smoothness in x -/ sorry⟩, 
-          /- smoothness in f -/ sorry⟩
-
-
-    end differential
-
-
-    /- https://en.wikipedia.org/wiki/Convenient_vector_space#Main_properties_of_smooth_calculus -/
-    section main_properties 
-      variables {U V : Type*} 
-        [normed_group U] [normed_space ℝ U]
-        [normed_group V] [normed_space ℝ V]
-
-      variables {G : Type*} 
-        [add_comm_group G] [vector_space ℝ G] [topological_space G] [locally_convex_space ℝ G]
-
-      noncomputable def comp : (F⟿G)⟿(E⟿F)⟿(E⟿G) := ⟨λ f, ⟨λ g, ⟨λ x, f (g x), sorry⟩, sorry⟩, sorry⟩
-      noncomputable def curry : (E×F⟿G)⟿(E⟿F⟿G) := ⟨λ f, ⟨λ x, ⟨λ y, f (x,y), sorry⟩, sorry⟩, sorry⟩
-      noncomputable def uncurry : (E⟿F⟿G)⟿(E×F⟿G) := ⟨λ f, ⟨λ p, f p.1 p.2, sorry⟩, sorry⟩
-
-    end main_properties
     
   end smooth_map
 
