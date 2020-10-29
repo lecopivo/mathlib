@@ -30,8 +30,8 @@ namespace locally_convex_space
   variables [add_comm_group E] [vector_space 𝕜 E] [topological_space E] [locally_convex_space 𝕜 E]
 
   /- add and smul are continuous in the topology induced by seminorms -/
-  instance  : topological_add_group E := sorry
-  instance  : topological_vector_space 𝕜 E := sorry
+  instance : topological_add_group E := sorry
+  instance : topological_vector_space 𝕜 E := sorry
 
 end locally_convex_space
 
@@ -41,7 +41,8 @@ section locally_convex_space
   variables [add_comm_group E] [vector_space 𝕜 E] [topological_space E] [locally_convex_space 𝕜 E]
   variables [add_comm_group F] [vector_space 𝕜 F] [topological_space F] [locally_convex_space 𝕜 F]
 
-  instance prod.locally_convex_space : locally_convex_space 𝕜 (E×F) := sorry
+  instance prod.locally_convex_space : locally_convex_space 𝕜 (E×F) := 
+    { seminorms_induce_topology := begin sorry end }
 
   instance pi.locally_convex_space {E : ι → Type*} [∀ i, add_comm_group (E i)] [∀i, vector_space 𝕜 (E i)]
     [∀ i, topological_space (E i)] [lcs : ∀ i, locally_convex_space 𝕜 (E i)] :
@@ -49,7 +50,22 @@ section locally_convex_space
   
   instance submodule.locally_convex_space (s : submodule 𝕜 E) : locally_convex_space 𝕜 s := sorry
 
-  instance normed_space.locally_convex_space {U : Type*} [normed_group U] [normed_space 𝕜 U] : locally_convex_space 𝕜 E := sorry
+  instance normed_space.locally_convex_space {U : Type*} [normed_group U] [normed_space 𝕜 U] : locally_convex_space 𝕜 U := sorry
+  
+  /- this has trouble working automatically -/
+  -- @[reducible, inline] instance real.locally_convex_space : locally_convex_space ℝ ℝ := normed_space.locally_convex_space
+
+
+  /-- Like `by apply_instance`, but not dependent on the tactic framework. -/
+  @[reducible] def infer {α : Prop} [i : α] : α := i
+
+
+  variables {X : Type*} [add_comm_group X] [vector_space ℝ X] [topological_space X] [locally_convex_space ℝ X]
+
+
+  #check (@infer (locally_convex_space ℝ X) _)
+  #check (@infer (locally_convex_space ℝ (X×X)) _)
+  #check (@infer (locally_convex_space ℝ (X→X)) _)
 
 end locally_convex_space
 
