@@ -56,11 +56,11 @@ namespace convenient
       variables (df : F⟿G) (dg : E⟿F) (dx : E) (dy : F) (dp : E×F)
 
       /- These needs to be proven directly -/
-      @[simp] lemma comp.arg3.diff_apply : δ (comp f g) x dx = δ f (g x) (δ g x dx) := sorry 
-      @[simp] lemma curry.arg3.diff_apply (f : E×F⟿G) : δ (curry f x) y dy = δ f (x,y) (0,dy) := sorry
-      @[simp] lemma curry.arg2.diff_apply (f : E×F⟿G) : δ (curry f) x dx y = δ f (x,y) (dx,0) := sorry
-      @[simp] lemma uncurry.arg2.diff_apply (f : E⟿F⟿G) : δ (uncurry f) p dp = δ f p.1 dp.1 p.2 + δ (f p.1) p.2 dp.2 := sorry
-      @[simp] lemma pair_map.arg3.diff_apply (f : E⟿G) (g : F⟿H) : δ (pair_map f g) p dp = (δ f p.1 dp.1, δ g p.2 dp.2) := sorry
+      @[simp] lemma comp.diff_apply.arg3 : δ (comp f g) x dx = δ f (g x) (δ g x dx) := sorry 
+      @[simp] lemma curry.diff_apply.arg3 (f : E×F⟿G) : δ (curry f x) y dy = δ f (x,y) (0,dy) :=  sorry
+      @[simp] lemma curry.diff_apply.arg2 (f : E×F⟿G) : δ (curry f) x dx y = δ f (x,y) (dx,0) := sorry
+      @[simp] lemma uncurry.diff_apply.arg2 (f : E⟿F⟿G) : δ (uncurry f) p dp = δ f p.1 dp.1 p.2 + δ (f p.1) p.2 dp.2 := sorry
+      @[simp] lemma pair_map.diff_apply.arg3 (f : E⟿G) (g : F⟿H) : δ (pair_map f g) p dp = (δ f p.1 dp.1, δ g p.2 dp.2) := sorry
 
 
       /- Differential of linear map is linear map its self, This will be easily proven once this general statemet is proven -/ 
@@ -75,29 +75,29 @@ namespace convenient
       @[simp] lemma perm.ad_bc.diff_apply (p dp : (E×F)×(G×H)) : δ perm.ad_bc p dp = perm.ad_bc dp := sorry
 
       /- also linear maps  -/
-      @[simp] lemma comp.arg1.diff_apply : δ comp f df g x = df (g x) := sorry
-      @[simp] lemma curry.arg1.diff_apply (f df : E×F⟿G) : δ curry f df x y = df (x,y) := sorry
-      @[simp] lemma uncurry.arg1.diff_apply (f df : E⟿F⟿G) : δ (uncurry) f df p = df p.1 p.2 := sorry
+      @[simp] lemma comp.diff_apply.arg1 : δ comp f df g x = df (g x) := sorry
+      @[simp] lemma curry.diff_apply.arg1 (f df : E×F⟿G) : δ curry f df x y = df (x,y) := sorry
+      @[simp] lemma uncurry.diff_apply.arg1 (f df : E⟿F⟿G) : δ (uncurry) f df p = df p.1 p.2 := sorry
 
       /- The rest can be deduced -/
       @[simp] lemma eval.diff_apply (fx dfx : (E⟿F)×E) : δ eval fx dfx = (δ (fx.1)) fx.2 dfx.2 + dfx.1 fx.2 := begin unfold eval, simp, abel, end
-      @[simp] lemma comp.arg2.diff_apply : δ (comp f) g dg x= δ f (g x) (dg x) := begin unfold comp, simp, end
+      @[simp] lemma comp.diff_apply.arg2 : δ (comp f) g dg x= δ f (g x) (dg x) := begin unfold comp, simp, end
 
-      @[simp] lemma pair_map.arg1.diff_apply (f df : E⟿G) (g : F⟿H) : δ (pair_map) f df g p = (df p.1, 0) := begin unfold pair_map, simp, end
-      @[simp] lemma pair_map.arg2.diff_apply (f : E⟿G) (g dg : F⟿H) : δ (pair_map f) g dg p = (0, dg p.2) := begin unfold pair_map, simp, end
+      @[simp] lemma pair_map.diff_apply.arg1 (f df : E⟿G) (g : F⟿H) : δ (pair_map) f df g p = (df p.1, 0) := begin unfold pair_map, simp, end
+      @[simp] lemma pair_map.diff_apply.arg2 (f : E⟿G) (g dg : F⟿H) : δ (pair_map f) g dg p = (0, dg p.2) := begin unfold pair_map, simp, end
 
-      @[simp] lemma pair.arg2.diff_apply : δ (pair x) y dy = (0,dy) := begin unfold pair, simp, end
-      @[simp] lemma pair.arg1.diff_apply : δ (pair) x dx y = (dx,0) := begin unfold pair, simp, end
+      @[simp] lemma pair.diff_apply.arg2 : δ (pair x) y dy = (0,dy) := begin unfold pair, simp, end
+      @[simp] lemma pair.diff_apply.arg1 : δ (pair) x dx y = (dx,0) := begin unfold pair, simp, end
 
-      @[simp] lemma const.arg2.diff_apply  : δ (const x) y dy = 0 := begin unfold const, simp end
-      @[simp] lemma const.arg1.diff_apply  : δ (const) x dx y = dx := begin unfold const, simp end
+      @[simp] lemma const.diff_apply.arg2  : δ (const x) y dy = 0 := begin unfold const, simp end
+      @[simp] lemma const.diff_apply.arg1  : δ (const) x dx y = dx := begin unfold const, simp end
       @[simp] lemma swap_pair.diff_apply : δ swap_pair p dp = swap_pair dp := begin unfold swap_pair, simp, end
-      @[simp] lemma rcomp.arg3.diff_apply : δ (rcomp g f) x dx = δ f (g x) (δ g x dx) := begin unfold rcomp, simp end
-      @[simp] lemma rcomp.arg2.diff_apply : δ (rcomp g) f df x = df (g x) := begin unfold rcomp, simp, end
-      @[simp] lemma rcomp.arg1.diff_apply : δ rcomp g dg f x = δ f (g x) (dg x) := begin unfold rcomp, simp, end
-      @[simp] lemma swap.arg3.diff_apply (f : E⟿F⟿G) : δ (swap f y) x dx = δ f x dx y := begin unfold swap, simp, end
-      @[simp] lemma swap.arg2.diff_apply (f : E⟿F⟿G) : δ (swap f) y dy x = δ (f x) y dy := begin unfold swap, simp, end
-      @[simp] lemma swap.arg1.diff_apply (f df : E⟿F⟿G) : δ (swap) f df y x = df x y := begin unfold swap, simp, end
+      @[simp] lemma rcomp.diff_apply.arg3 : δ (rcomp g f) x dx = δ f (g x) (δ g x dx) := begin unfold rcomp, simp end
+      @[simp] lemma rcomp.diff_apply.arg2 : δ (rcomp g) f df x = df (g x) := begin unfold rcomp, simp, end
+      @[simp] lemma rcomp.diff_apply.arg1 : δ rcomp g dg f x = δ f (g x) (dg x) := begin unfold rcomp, simp, end
+      @[simp] lemma swap.diff_apply.arg3 (f : E⟿F⟿G) : δ (swap f y) x dx = δ f x dx y := begin unfold swap, simp, end
+      @[simp] lemma swap.diff_apply.arg2 (f : E⟿F⟿G) : δ (swap f) y dy x = δ (f x) y dy := begin unfold swap, simp, end
+      @[simp] lemma swap.diff_apply.arg1 (f df : E⟿F⟿G) : δ (swap) f df y x = df x y := begin unfold swap, simp, end
       
     end differentials_of_basic_functions
 
