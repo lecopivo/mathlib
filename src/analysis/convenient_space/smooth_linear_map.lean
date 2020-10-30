@@ -76,7 +76,7 @@ namespace convenient
       /-- Composition of two smooth maps is a smoth map -/
       def comp : E ⊸ G := mk (smooth_map.comp f.to_smooth_map g.to_smooth_map) (begin split, repeat {intros, simp}, end)
 
-      @[simp] lemma comp_apply (x : E) : comp f g x = f (g x) := rfl
+      @[simp] lemma comp_apply (x : E) : f.comp g x = f (g x) := rfl
 
       @[norm_cast]
       lemma comp_coe : (f : F → G) ∘ (g : E → F) = f.comp g := rfl
