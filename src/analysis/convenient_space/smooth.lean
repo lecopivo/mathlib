@@ -1,6 +1,7 @@
 import analysis.convenient_space.smooth_map
 import analysis.convenient_space.smooth_linear_map
-
+import analysis.convenient_space.differential
+import analysis.convenient_space.exponential
 
 namespace convenient
 
@@ -11,99 +12,92 @@ namespace convenient
       {F : Type*} [add_comm_group F] [vector_space ℝ F] [topological_space F] [locally_convex_space ℝ F] 
       {G : Type*} [add_comm_group G] [vector_space ℝ G] [topological_space G] [locally_convex_space ℝ G] 
       {H : Type*} [add_comm_group H] [vector_space ℝ H] [topological_space H] [locally_convex_space ℝ H] 
-
-    namespace detail
-
-      /- Identity -/
-      lemma id'.is_smooth : is_smooth (@id E) := sorry
-      lemma id'.is_linear : is_linear_map ℝ (@id E) := sorry
-      @[reducible] def id' : E⟿E := ⟨id, id'.is_smooth⟩
-
-      /- Diag -/
-      lemma diag'.is_smooth : is_smooth (λ x : E, (x,x)) := sorry
-      lemma diag'.is_linear : is_linear_map ℝ (λ x : E, (x,x)) := sorry
-      @[reducible] noncomputable def diag' : E⟿E×E := ⟨λ x : E, (x,x), diag'.is_smooth⟩
-
-      /- Fst -/
-      lemma fst'.is_smooth : is_smooth (λ p : E×F, p.1) := sorry
-      lemma fst'.is_linear : is_linear_map ℝ (λ p : E×F, p.1) := sorry
-      @[reducible] noncomputable def fst' : E×F⟿E := ⟨λ p : E×F, p.1, fst'.is_smooth⟩
-
-      /- Snd -/
-      lemma snd'.is_smooth : is_smooth (λ p : E×F, p.2) := sorry
-      lemma snd'.is_linear : is_linear_map ℝ (λ p : E×F, p.2) := sorry
-      @[reducible] noncomputable def snd' : E×F⟿F := ⟨λ p : E×F, p.2, snd'.is_smooth⟩
     
-      /- Comp -/
-      lemma comp'''.is_smooth (f : F⟿G) (g : E⟿F) : is_smooth (λ x, f (g x)) := sorry
-      @[reducible] def comp''' (f : F⟿G) (g : E⟿F) : E⟿G := ⟨λ x, f (g x), comp'''.is_smooth f g⟩
-      
-      lemma comp''.is_smooth (f : F⟿G) : is_smooth (comp''' f : (E⟿F)→(E⟿G)) := sorry
-      @[reducible] noncomputable def comp'' (f : F⟿G) : (E⟿F)⟿(E⟿G) := ⟨comp''' f, comp''.is_smooth f⟩
+    noncomputable def eval : (E⟿F)×E⟿F := id.uncurry 
+    noncomputable def pair : E⟿F⟿E×F := id.curry
+    noncomputable def comp : (F⟿G)⟿(E⟿F)⟿(E⟿G) := (eval.comp $ (id.pair_map eval).comp $ assocr).curry.curry
+    noncomputable def curry : ((E×F)⟿G)⟿(E⟿F⟿G) := (eval.comp assocr).curry.curry
+    noncomputable def uncurry : (E⟿F⟿G)⟿((E×F)⟿G) := (eval.comp $ (eval.pair_map id).comp $ assocl).curry
 
-      lemma comp'.is_smooth : is_smooth (comp'' : (F⟿G)→(E⟿F)⟿(E⟿G)) := sorry
-      @[reducible] noncomputable def comp' : (F⟿G)⟿(E⟿F)⟿(E⟿G) := ⟨comp'', comp'.is_smooth⟩
+    /- hom bifunctor (f,g) → (h → g∘h∘f)) -/
+    noncomputable def hom : (E⟿F)×(G⟿H)⟿((F⟿G)⟿(E⟿H)) := 
+      (comp.uncurry.comp $ (id.pair_map comp.uncurry).comp $ assocr.comp $ perm.ba.comp $ assocr).curry
+    
+    /- product bifunctor -/
+    noncomputable def pair_map : (E⟿F)⟿(G⟿H)⟿(E×G⟿F×H) := ((eval.pair_map eval).comp $ perm.ac_bd).curry.curry
 
-      /- Pair Map -/
-      lemma pair_map'''.is_smooth (f : E⟿F) (g : G⟿H) : is_smooth (λ p : E×G, (f p.1, g p.2)) := sorry
-      @[reducible] noncomputable def pair_map''' (f : E⟿F) (g : G⟿H) : E×G⟿F×H := ⟨(λ p : E×G, (f p.1, g p.2)), pair_map'''.is_smooth f g⟩
+    /- Normalization - prefer functions in `smooth.??` over `smooth_map.??` -/
+    @[simp] lemma comp_coe : smooth_map.comp = (λ f, smooth.comp f : (F⟿G)→(E⟿F)→(E⟿G)) := rfl 
+    @[simp] lemma curry_coe  : smooth_map.curry = (smooth.curry : ((E×F)⟿G)→(E⟿F⟿G)) := rfl
+    @[simp] lemma uncurry_coe : smooth_map.uncurry = (smooth.uncurry : (E⟿F⟿G)→((E×F)⟿G)) := rfl
+    @[simp] lemma pair_map_coe : smooth_map.pair_map = (λ f g, smooth.pair_map f g : (E⟿F)→(G⟿H)→(E×G⟿F×H)) := rfl
 
-      lemma pair_map''.is_smooth (f : E⟿F) : is_smooth (pair_map''' f : (G⟿H)→(E×G⟿F×H)) := sorry
-      @[reducible] noncomputable def pair_map'' (f : E⟿F) : (G⟿H)⟿(E×G⟿F×H) := ⟨pair_map''' f, pair_map''.is_smooth f⟩
+    variables (f : F⟿G) (g : E⟿F) (x : E) (y : F) (p : E×F)    
+    @[simp] lemma eval_apply : eval (g,x) = g x := rfl 
+    @[simp] lemma pair_apply : pair x y = (x,y) := rfl 
+    @[simp] lemma comp_apply : comp f g x = f (g x) := rfl
+    @[simp] lemma curry_apply (f : E×F⟿G) : curry f x y = f (x,y) := rfl
+    @[simp] lemma uncurry_apply (f : E⟿F⟿G) : uncurry f p = f p.1 p.2 := rfl
+    @[simp] lemma hom_apply (fg : (E⟿F)×(G⟿H)) (h : F⟿G) : hom fg h = comp fg.2 (comp h fg.1) := rfl
+    @[simp] lemma pair_map_apply (f : E⟿F) (g : G⟿H) (p : E×G) : pair_map f g p = (f p.1, g p.2) := rfl
 
-      lemma pair_map'.is_smooth : is_smooth (pair_map'' : (E⟿F)→(G⟿H)⟿(E×G⟿F×H)) := sorry
-      @[reducible] noncomputable def pair_map' : (E⟿F)⟿(G⟿H)⟿(E×G⟿F×H) := ⟨pair_map'', pair_map'.is_smooth⟩
-
-      /- Curry -/
-      lemma curry'''.is_smooth (f : E×F⟿G) (x : E) : is_smooth (λ y : F, f (x,y)) := sorry
-      @[reducible] noncomputable def curry''' (f : E×F⟿G) (x : E) : F⟿G := ⟨λ y : F, f (x,y), curry'''.is_smooth f x⟩
-
-      lemma curry''.is_smooth (f : E×F⟿G) : is_smooth (curry''' f) := sorry
-      @[reducible] noncomputable def curry'' (f : E×F⟿G) : E⟿F⟿G := ⟨curry''' f, curry''.is_smooth f⟩
-
-      lemma curry'.is_smooth : is_smooth (curry'' : (E×F⟿G)→(E⟿F⟿G)) := sorry
-      lemma curry'.is_linear : is_linear_map ℝ (curry'' : (E×F⟿G)→(E⟿F⟿G)) := sorry
-      @[reducible] noncomputable def curry' : (E×F⟿G)⟿(E⟿F⟿G) := ⟨curry'', curry'.is_smooth⟩
-
-      /- Uncurry -/
-      lemma uncurry''.is_smooth (f : E⟿F⟿G) : is_smooth (λ p : E×F, f p.1 p.2) := sorry
-      @[reducible] noncomputable def uncurry'' (f : E⟿F⟿G) : E×F⟿G := ⟨λ p, f p.1 p.2, uncurry''.is_smooth f⟩
-
-      lemma uncurry'.is_smooth : is_smooth (uncurry'' : (E⟿F⟿G)→(E×F⟿G)) := sorry
-      lemma uncurry'.is_linear : is_linear_map ℝ (uncurry'' : (E⟿F⟿G)→(E×F⟿G)) := sorry
-      @[reducible] noncomputable def uncurry' : (E⟿F⟿G)⟿(E×F⟿G) := ⟨uncurry'', uncurry'.is_smooth⟩
-
-    end detail
-
-    def id : E⟿E := detail.id'
-    noncomputable def diag : E⟿E×E := detail.diag'
-    noncomputable def fst : E×F⟿E := detail.fst'
-    noncomputable def snd : E×F⟿F := detail.snd'
-    noncomputable def comp : (F⟿G)⟿(E⟿F)⟿(E⟿G) := detail.comp'
-    noncomputable def pair_map : (E⟿F)⟿(G⟿H)⟿(E×G⟿F×H) := detail.pair_map'
-    noncomputable def curry : (E×F⟿G)⟿(E⟿F⟿G) := detail.curry'
-    noncomputable def uncurry : (E⟿F⟿G)⟿(E×F⟿G) := detail.uncurry'
-
-    lemma unwrap (f : E⟿F) (x : E) : f x = f.1 x := begin unfold coe_fn, unfold has_coe_to_fun.coe, end
-
-    @[simp] lemma id_apply (x : E) : id x = x := begin unfold id, repeat {rw unwrap}, simp, end
-    @[simp] lemma diag_apply (x : E) : diag x = (x, x) := begin unfold diag, repeat {rw unwrap}, end
-    @[simp] lemma fst_apply (p : E×F) : fst p = p.1 := begin unfold fst, repeat {rw unwrap}, end
-    @[simp] lemma snd_apply (p : E×F) : snd p = p.2 := begin unfold snd, repeat {rw unwrap}, end
-    @[simp] lemma pair_map_apply (f : E⟿F) (g : G⟿H) (p : E×G) : pair_map f g p = (f p.1, g p.2) := begin unfold pair_map, repeat {rw unwrap}, end
-    @[simp] lemma comp_apply (f : F⟿G) (g : E⟿F) : comp f g = f.comp g := begin ext, simp, unfold comp, repeat {rw unwrap}, end
-    @[simp] lemma curry_apply (f : E×F⟿G) (x : E) (y : F) : curry f x y = f (x,y) := begin unfold curry, repeat {rw unwrap},  end
-    @[simp] lemma uncurry_apply (f : E⟿F⟿G) (p : E×F) : uncurry f p = f p.1 p.2 := begin unfold uncurry, repeat {rw unwrap}, end
-    @[simp] lemma uncurry_curry : ((uncurry.comp curry) : (E×F⟿G)⟿(E×F⟿G)) = id := begin ext, simp, end
-    @[simp] lemma curry_uncurry : ((curry.comp uncurry) : (E⟿F⟿G)⟿(E⟿F⟿G)) = id := begin ext, simp, end
-
+    noncomputable def const : E⟿F⟿E := curry fst
     noncomputable def swap_pair : (E×F⟿F×E) := (pair_map snd fst).comp diag
-    noncomputable def rcomp : (E⟿F)⟿(F⟿G)⟿(E⟿G) := curry ((uncurry comp).comp swap_pair)
+    @[reducible, inline] noncomputable def rcomp : (E⟿F)⟿(F⟿G)⟿(E⟿G) := curry ((uncurry comp).comp swap_pair)
     noncomputable def swap : (E⟿F⟿G)⟿(F⟿E⟿G) := curry.comp ((rcomp swap_pair).comp uncurry)
 
-    @[simp] lemma swap_pair_apply (x : E) (y : F) : swap_pair (x,y) = (y,x) := begin unfold swap_pair, simp, end
-    @[simp] lemma rcomp_apply (f : F⟿G) (g : E⟿F) : rcomp g f = comp f g := begin unfold rcomp, simp, end
-    @[simp] lemma swap_apply (f : E⟿F⟿G) (x : E) (y : F) : swap f y x = f x y := begin unfold swap, simp, end
+    @[simp] lemma const_apply : const x y = x := rfl
+    @[simp] lemma swap_pair_apply  : swap_pair p = (p.2,p.1) := rfl
+    @[simp] lemma rcomp_apply : rcomp g f = comp f g := rfl 
+    @[simp] lemma swap_apply (f : E⟿F⟿G) : swap f y x = f x y := rfl 
+
+    section differentials_of_basic_functions
+
+      variables (df : F⟿G) (dg : E⟿F) (dx : E) (dy : F) (dp : E×F)
+
+      /- These needs to be proven directly -/
+      @[simp] lemma comp.arg3.diff_apply : δ (comp f g) x dx = δ f (g x) (δ g x dx) := sorry 
+      @[simp] lemma curry.arg3.diff_apply (f : E×F⟿G) : δ (curry f x) y dy = δ f (x,y) (0,dy) := sorry
+      @[simp] lemma curry.arg2.diff_apply (f : E×F⟿G) : δ (curry f) x dx y = δ f (x,y) (dx,0) := sorry
+      @[simp] lemma uncurry.arg2.diff_apply (f : E⟿F⟿G) : δ (uncurry f) p dp = δ f p.1 dp.1 p.2 + δ (f p.1) p.2 dp.2 := sorry
+      @[simp] lemma pair_map.arg3.diff_apply (f : E⟿G) (g : F⟿H) : δ (pair_map f g) p dp = (δ f p.1 dp.1, δ g p.2 dp.2) := sorry
+
+
+      /- Differential of linear map is linear map its self, This will be easily proven once this general statemet is proven -/ 
+      @[simp] lemma id.diff_apply : δ (id : E⟿E) x dx = id dx := sorry
+      @[simp] lemma fst.diff_apply : δ (fst : E×F⟿E) p dp = fst dp := sorry
+      @[simp] lemma snd.diff_apply : δ (snd : E×F⟿F) p dp = snd dp := sorry
+      @[simp] lemma diag.diff_apply : δ (diag : E⟿E×E) x dx = diag dx := sorry
+      @[simp] lemma assocr.diff_apply (t dt : (E×F)×G) : δ (assocr) t dt = assocr dt := sorry
+      @[simp] lemma assocl.diff_apply (t dt : E×(F×G)) : δ (assocl) t dt = assocl dt := sorry
+      @[simp] lemma perm.ba.diff_apply (p dp : E×F) : δ perm.ba p dp = perm.ba dp := sorry
+      @[simp] lemma perm.ac_bd.diff_apply (p dp : (E×F)×(G×H)) : δ perm.ac_bd p dp = perm.ac_bd dp := sorry
+      @[simp] lemma perm.ad_bc.diff_apply (p dp : (E×F)×(G×H)) : δ perm.ad_bc p dp = perm.ad_bc dp := sorry
+
+      /- also linear maps  -/
+      @[simp] lemma comp.arg1.diff_apply : δ comp f df g x = df (g x) := sorry
+      @[simp] lemma curry.arg1.diff_apply (f df : E×F⟿G) : δ curry f df x y = df (x,y) := sorry
+      @[simp] lemma uncurry.arg1.diff_apply (f df : E⟿F⟿G) : δ (uncurry) f df p = df p.1 p.2 := sorry
+
+
+      @[simp] lemma eval.diff_apply (fx dfx : (E⟿F)×E) : δ eval fx dfx = (δ (fx.1)) fx.2 dfx.2 + dfx.1 fx.2 := begin unfold eval, simp, abel, end
+      @[simp] lemma comp.arg2.diff_apply : δ (comp f) g dg x= δ f (g x) (dg x) := begin unfold comp, simp, end
+
+      @[simp] lemma pair_map.arg1.diff_apply (f df : E⟿G) (g : F⟿H) : δ (pair_map) f df g p = (df p.1, 0) := begin unfold pair_map, simp, end
+      @[simp] lemma pair_map.arg2.diff_apply (f : E⟿G) (g dg : F⟿H) : δ (pair_map f) g dg p = (0, dg p.2) := begin unfold pair_map, simp, end
+
+      @[simp] lemma pair.arg2.diff_apply : δ (pair x) y dy = (0,dy) := begin unfold pair, simp, end
+      @[simp] lemma pair.arg1.diff_apply : δ (pair) x dx y = (dx,0) := begin unfold pair, simp, end
+
+      @[simp] lemma const.arg2.diff_apply  : δ (const x) y dy = 0 := begin unfold const, simp end
+      @[simp] lemma const.arg1.diff_apply  : δ (const) x dx y = dx := begin unfold const, simp end
+      @[simp] lemma swap_pair.diff_apply : δ swap_pair p dp = swap_pair dp := begin unfold swap_pair, simp, end
+      @[simp] lemma swap.arg3.diff_apply (f : E⟿F⟿G) : δ (swap f y) x dx = δ f x dx y := begin unfold swap, simp, end
+      @[simp] lemma swap.arg2.diff_apply (f : E⟿F⟿G) : δ (swap f) y dy x = δ (f x) y dy := begin unfold swap, simp, end
+      @[simp] lemma swap.arg1.diff_apply (f df : E⟿F⟿G) : δ (swap) f df y x = df x y := begin unfold swap, simp, end
+      
+
+    end differentials_of_basic_functions
 
   end smooth
 

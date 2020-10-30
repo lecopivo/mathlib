@@ -1,5 +1,6 @@
 import analysis.convenient_space.smooth_map
 import analysis.convenient_space.smooth_linear_map
+import analysis.convenient_space.exponential
 
 reserve prefix `δ`: 1500
 
@@ -13,30 +14,35 @@ namespace convenient
     namespace detail
       /- This namespace containes some helper functions to define final differential. -/
 
-      @[reducible] noncomputable def diff_core (f : E⟿F) (x dx : E) : F := 
+      @[reducible] noncomputable def diff.core (f : E⟿F) (x dx : E) : F := 
         smooth_curve.deriv ⟨f ∘ (smooth_curve.line x dx), begin apply f.2, tauto, end⟩ 0
-  
-      lemma diff'''.is_linear (f : E⟿F) (x : E) : is_linear_map ℝ (diff_core f x) := sorry
-      lemma diff'''.is_smooth (f : E⟿F) (x : E) : is_smooth (diff_core f x) := sorry
-      @[reducible] noncomputable def diff''' (f : E⟿F) (x : E) : E⊸F := ⟨⟨λ dx, diff_core f x dx, diff'''.is_smooth f x⟩, diff'''.is_linear f x⟩
-  
-      lemma diff''.is_smooth (f : E⟿F) : is_smooth (diff''' f) := sorry
-      @[reducible] noncomputable def diff'' (f : E⟿F) : E⟿(E⊸F) := ⟨λ x, diff''' f x, diff''.is_smooth f⟩
-  
-      lemma diff'.is_linear : is_linear_map ℝ (diff'' : (E⟿F)→(E⟿(E⊸F))) := sorry
-      lemma diff'.is_smooth : is_smooth (diff'' : (E⟿F)→(E⟿(E⊸F))) := sorry
-      @[reducible] noncomputable def diff' : (E⟿F)⊸(E⟿(E⊸F)) := ⟨⟨λ f, diff'' f, diff'.is_smooth⟩, diff'.is_linear⟩
+
+      noncomputable def diff.to_fun : (((E⟿F)×E)×E)→F := 
+        λ fxdx, 
+          let f := fxdx.1.1 in
+          let x := fxdx.1.2 in
+          let dx := fxdx.2 in 
+          diff.core f x dx
+
+      lemma diff.is_smooth : is_smooth (diff.to_fun : (((E⟿F)×E)×E)→F) := sorry
+      noncomputable def diff : (((E⟿F)×E)×E)⟿F := ⟨diff.to_fun, diff.is_smooth⟩
 
     end detail
 
     /- TODO: Here I might need that E and F are convenient vector spaces, but I'm not sure. -/
-    noncomputable def diff : (E⟿F)⊸(E⟿(E⊸F)) := detail.diff'
+    /- The differential could be also defined as `diff : (E⟿F)⊸(E⟿(E⊸F))`. -/
+    /- However, mixing smooth and linear maps would get us into a coercion hell, or at least I do not know how to avoid it -/
+    noncomputable def diff : (E⟿F)⟿(E⟿(E⟿F)) := (detail.diff).curry.curry
   
     notation δ f := diff f
 
-    variables {f : F⟿G} {g : E⟿F}
+    variables {f : F⟿G} {g : E⟿F} {x dx dx': E} {s : ℝ}
 
-    lemma comp.diff (x dx : E) : δ (f.comp g) x dx = δ f (g x) (δ g x dx) := sorry
+    lemma comp.diff : δ (f.comp g) x dx = δ f (g x) (δ g x dx) := sorry
+
+    @[simp] lemma diff.smul_apply : δ g x (s•dx) = s • (δ g x dx) := sorry
+    @[simp] lemma diff.add_apply : δ g x (dx+dx') = δ g x dx + δ g x dx' := sorry
+    @[simp] lemma diff.zero_apply : δ g x 0 = 0 := sorry
 
     end differential
 
