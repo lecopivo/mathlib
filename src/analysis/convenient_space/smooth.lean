@@ -97,6 +97,14 @@ namespace convenient
     @[simp] lemma uncurry_curry : ((uncurry.comp curry) : (E×F⟿G)⟿(E×F⟿G)) = id := begin ext, simp, end
     @[simp] lemma curry_uncurry : ((curry.comp uncurry) : (E⟿F⟿G)⟿(E⟿F⟿G)) = id := begin ext, simp, end
 
+    noncomputable def swap_pair : (E×F⟿F×E) := (pair_map snd fst).comp diag
+    noncomputable def rcomp : (E⟿F)⟿(F⟿G)⟿(E⟿G) := curry ((uncurry comp).comp swap_pair)
+    noncomputable def swap : (E⟿F⟿G)⟿(F⟿E⟿G) := curry.comp ((rcomp swap_pair).comp uncurry)
+
+    @[simp] lemma swap_pair_apply (x : E) (y : F) : swap_pair (x,y) = (y,x) := begin unfold swap_pair, simp, end
+    @[simp] lemma rcomp_apply (f : F⟿G) (g : E⟿F) : rcomp g f = comp f g := begin unfold rcomp, simp, end
+    @[simp] lemma swap_apply (f : E⟿F⟿G) (x : E) (y : F) : swap f y x = f x y := begin unfold swap, simp, end
+
   end smooth
 
 end convenient
