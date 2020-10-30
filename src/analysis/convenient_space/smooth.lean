@@ -43,7 +43,7 @@ namespace convenient
 
     noncomputable def const : E⟿F⟿E := curry fst
     noncomputable def swap_pair : (E×F⟿F×E) := (pair_map snd fst).comp diag
-    @[reducible, inline] noncomputable def rcomp : (E⟿F)⟿(F⟿G)⟿(E⟿G) := curry ((uncurry comp).comp swap_pair)
+    noncomputable def rcomp : (E⟿F)⟿(F⟿G)⟿(E⟿G) := curry ((uncurry comp).comp swap_pair)
     noncomputable def swap : (E⟿F⟿G)⟿(F⟿E⟿G) := curry.comp ((rcomp swap_pair).comp uncurry)
 
     @[simp] lemma const_apply : const x y = x := rfl
@@ -79,7 +79,7 @@ namespace convenient
       @[simp] lemma curry.arg1.diff_apply (f df : E×F⟿G) : δ curry f df x y = df (x,y) := sorry
       @[simp] lemma uncurry.arg1.diff_apply (f df : E⟿F⟿G) : δ (uncurry) f df p = df p.1 p.2 := sorry
 
-
+      /- The rest can be deduced -/
       @[simp] lemma eval.diff_apply (fx dfx : (E⟿F)×E) : δ eval fx dfx = (δ (fx.1)) fx.2 dfx.2 + dfx.1 fx.2 := begin unfold eval, simp, abel, end
       @[simp] lemma comp.arg2.diff_apply : δ (comp f) g dg x= δ f (g x) (dg x) := begin unfold comp, simp, end
 
@@ -92,11 +92,13 @@ namespace convenient
       @[simp] lemma const.arg2.diff_apply  : δ (const x) y dy = 0 := begin unfold const, simp end
       @[simp] lemma const.arg1.diff_apply  : δ (const) x dx y = dx := begin unfold const, simp end
       @[simp] lemma swap_pair.diff_apply : δ swap_pair p dp = swap_pair dp := begin unfold swap_pair, simp, end
+      @[simp] lemma rcomp.arg3.diff_apply : δ (rcomp g f) x dx = δ f (g x) (δ g x dx) := begin unfold rcomp, simp end
+      @[simp] lemma rcomp.arg2.diff_apply : δ (rcomp g) f df x = df (g x) := begin unfold rcomp, simp, end
+      @[simp] lemma rcomp.arg1.diff_apply : δ rcomp g dg f x = δ f (g x) (dg x) := begin unfold rcomp, simp, end
       @[simp] lemma swap.arg3.diff_apply (f : E⟿F⟿G) : δ (swap f y) x dx = δ f x dx y := begin unfold swap, simp, end
       @[simp] lemma swap.arg2.diff_apply (f : E⟿F⟿G) : δ (swap f) y dy x = δ (f x) y dy := begin unfold swap, simp, end
       @[simp] lemma swap.arg1.diff_apply (f df : E⟿F⟿G) : δ (swap) f df y x = df x y := begin unfold swap, simp, end
       
-
     end differentials_of_basic_functions
 
   end smooth
