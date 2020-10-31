@@ -30,6 +30,7 @@ namespace convenient
 
     def neg : E⟿E := ⟨has_neg.neg, begin sorry end⟩
     def add : E⟿E⟿E := ⟨λ x, ⟨λ y, x + y, sorry⟩, sorry⟩
+    def smul : ℝ⟿E⟿E := ⟨λ s, ⟨λ x, s • x, sorry⟩, sorry⟩
 
     /- Normalization - prefer functions in `smooth.??` over `smooth_map.??` -/
     @[simp] lemma comp_coe : smooth_map.comp = (λ f, smooth.comp f : (F⟿G)→(E⟿F)→(E⟿G)) := rfl 

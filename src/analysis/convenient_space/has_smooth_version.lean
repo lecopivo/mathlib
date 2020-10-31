@@ -13,16 +13,12 @@ namespace convenient
     { func := smooth.pair x,
       eq := rfl }
 
-  instance asdf_neg_has_smooth_version (x : E) : has_smooth_version (has_neg.neg : E→E) :=
+  instance neg.has_smooth_version (x : E) : has_smooth_version (has_neg.neg : E→E) :=
     { func := smooth.neg,
       eq := rfl }
 
   instance add.arg2.has_smooth_version (x : E) : has_smooth_version (has_add.add x : E→E) :=
     { func := smooth.add x,
       eq := rfl }
-
-    -- instance prod.mk.arg2 : has_smooth_version (prod.mk : E→F→E×F) :=
-    --   { func := smooth.pair,
-    --     eq := rfl }
 
 end convenient
