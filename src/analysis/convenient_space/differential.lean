@@ -6,20 +6,6 @@ reserve prefix `δ`: 1500
 
 namespace convenient
 
-  namespace smooth_map
-    variables 
-      {E : Type*} [add_comm_group E] [vector_space ℝ E] [topological_space E] [locally_convex_space ℝ E]
-      {F : Type*} [add_comm_group F] [vector_space ℝ F] [topological_space F] [locally_convex_space ℝ F] 
-      {G : Type*} [add_comm_group G] [vector_space ℝ G] [topological_space G] [locally_convex_space ℝ G] 
-      {H : Type*} [add_comm_group H] [vector_space ℝ H] [topological_space H] [locally_convex_space ℝ H] 
-      {h : E⟿F} {g : F⟿G} {f : G⟿H}
-
-    lemma comp.assocr : (f.comp g).comp h = f.comp (g.comp h) := begin ext, simp, end
-    lemma comp.assocl : f.comp (g.comp h) = (f.comp g).comp h := begin ext, simp, end
-
-  end smooth_map
-
-
   section differential
     variables 
       {E : Type*} [add_comm_group E] [vector_space ℝ E] [topological_space E] [locally_convex_space ℝ E]

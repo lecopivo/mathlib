@@ -99,12 +99,15 @@ namespace convenient
         {E : Type*} [add_comm_group E] [vector_space ℝ E] [topological_space E] [locally_convex_space ℝ E]
         {F : Type*} [add_comm_group F] [vector_space ℝ F] [topological_space F] [locally_convex_space ℝ F] 
         {G : Type*} [add_comm_group G] [vector_space ℝ G] [topological_space G] [locally_convex_space ℝ G]
+        {H : Type*} [add_comm_group H] [vector_space ℝ H] [topological_space H] [locally_convex_space ℝ H]
         (f : F⟿G) (g : E⟿F)
 
       /-- Composition of two smooth maps is a smoth map -/
       def comp : E ⟿ G := ⟨f ∘ g, begin apply comp.is_smooth, apply f.2, apply g.2 end ⟩
 
       @[simp] lemma comp_apply (x : E) : comp f g x = f (g x) := rfl
+      lemma comp.assocr {f : G⟿H} {g : F⟿G} {h : E⟿F} : (f.comp g).comp h = f.comp (g.comp h) := begin ext, simp, end
+      lemma comp.assocl {f : G⟿H} {g : F⟿G} {h : E⟿F} : f.comp (g.comp h) = (f.comp g).comp h := begin ext, simp, end
 
       @[norm_cast]
       lemma comp_coe : (f : F → G) ∘ (g : E → F) = f.comp g := rfl
@@ -229,15 +232,15 @@ namespace convenient
     noncomputable def perm.ad_bc : (E×F)×(G×H)⟿(E×H)×(F×G) := perm.ac_bd.comp $ (id.pair_map perm.ba)
 
     open smooth_map
-    @[simp] lemma id_apply (x : E) : id x = x := begin unfold id, rw unwrap, simp, end
-    @[simp] lemma fst_apply (p : E×F) : fst p = p.1 := begin unfold fst, rw unwrap, end
-    @[simp] lemma snd_apply (p : E×F) : snd p = p.2 := begin unfold snd, rw unwrap, end
-    @[simp] lemma diag_apply (x : E) : diag x = (x,x) := begin unfold diag, rw unwrap, end
-    @[simp] lemma assocr_apply (t : (E×F)×G) : assocr t = (t.1.1,(t.1.2,t.2)) := begin unfold assocr, simp, end
-    @[simp] lemma assocl_apply (t : E×(F×G)) : assocl t = ((t.1,t.2.1),t.2.2) := begin unfold assocl, simp, end
-    @[simp] lemma perm.ba_apply (p : E×F) : perm.ba p = (p.2,p.1) := begin unfold perm.ba, simp, end
-    @[simp] lemma perm.ac_bd_apply (p : (E×F)×(G×H)) : perm.ac_bd p = ((p.1.1,p.2.1),(p.1.2,p.2.2)) := begin unfold perm.ac_bd, simp, end
-    @[simp] lemma perm.ad_bc_apply (p : (E×F)×(G×H)) : perm.ad_bc p = ((p.1.1,p.2.2),(p.1.2,p.2.1)) := begin unfold perm.ad_bc, simp, end
+    @[simp] lemma id.apply (x : E) : id x = x := begin unfold id, rw unwrap, simp, end
+    @[simp] lemma fst.apply (p : E×F) : fst p = p.1 := begin unfold fst, rw unwrap, end
+    @[simp] lemma snd.apply (p : E×F) : snd p = p.2 := begin unfold snd, rw unwrap, end
+    @[simp] lemma diag.apply (x : E) : diag x = (x,x) := begin unfold diag, rw unwrap, end
+    @[simp] lemma assocr.apply (t : (E×F)×G) : assocr t = (t.1.1,(t.1.2,t.2)) := begin unfold assocr, simp, end
+    @[simp] lemma assocl.apply (t : E×(F×G)) : assocl t = ((t.1,t.2.1),t.2.2) := begin unfold assocl, simp, end
+    @[simp] lemma perm.ba.apply (p : E×F) : perm.ba p = (p.2,p.1) := begin unfold perm.ba, simp, end
+    @[simp] lemma perm.ac_bd.apply (p : (E×F)×(G×H)) : perm.ac_bd p = ((p.1.1,p.2.1),(p.1.2,p.2.2)) := begin unfold perm.ac_bd, simp, end
+    @[simp] lemma perm.ad_bc.apply (p : (E×F)×(G×H)) : perm.ad_bc p = ((p.1.1,p.2.2),(p.1.2,p.2.1)) := begin unfold perm.ad_bc, simp, end
 
   end smooth
 
