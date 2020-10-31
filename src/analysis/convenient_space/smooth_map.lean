@@ -217,7 +217,6 @@ namespace convenient
         {G : Type*} [add_comm_group G] [vector_space ℝ G] [topological_space G] [locally_convex_space ℝ G] 
         {H : Type*} [add_comm_group H] [vector_space ℝ H] [topological_space H] [locally_convex_space ℝ H] 
 
-
     def id : E⟿E := ⟨id, begin apply prove_smoothness, simp, intros, apply c.2, end⟩
     noncomputable def fst : E×F⟿E := ⟨prod.fst, begin apply prove_smoothness, intros, sorry, end⟩
     noncomputable def snd : E×F⟿F := ⟨prod.snd, begin apply prove_smoothness, intros, sorry, end⟩
@@ -241,5 +240,21 @@ namespace convenient
     @[simp] lemma perm.ad_bc_apply (p : (E×F)×(G×H)) : perm.ad_bc p = ((p.1.1,p.2.2),(p.1.2,p.2.1)) := begin unfold perm.ad_bc, simp, end
 
   end smooth
+
+  section has_smooth_version
+    variables 
+      {E : Type*} [add_comm_group E] [vector_space ℝ E] [topological_space E] [locally_convex_space ℝ E]
+      {F : Type*} [add_comm_group F] [vector_space ℝ F] [topological_space F] [locally_convex_space ℝ F] 
+      {G : Type*} [add_comm_group G] [vector_space ℝ G] [topological_space G] [locally_convex_space ℝ G] 
+    
+    class has_smooth_version (f : E→F) :=
+      (func : E⟿F)
+      (eq : (func : E→F) = f)
+
+    instance smoooth_map.has_smooth_version (f : E⟿F) : has_smooth_version (f : E→F) :=
+      { func := f,
+        eq := rfl }
+
+  end has_smooth_version
 
 end convenient
