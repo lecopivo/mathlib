@@ -2,6 +2,8 @@ import analysis.convenient_space.smooth_map
 
 reserve infixr ` ⊸ `:25
 
+noncomputable theory
+
 namespace convenient
 
 
@@ -56,6 +58,7 @@ namespace convenient
         ⟨λ h x, by rw h, by ext⟩    
 
       @[simp, norm_cast] lemma coe_coe (f : E⊸F) : ((f : E ⟿ F) : (E → F)) = (f : E → F) := rfl
+      @[simp] lemma coe_coe_2 (f : E⊸F) : (has_coe_t_aux.coe : (E⊸F)→(E⟿F)) f = (f : (E⟿F)) := rfl
 
       variables (s : ℝ) (f g : E⊸F) (x y z : E)
 
@@ -63,6 +66,9 @@ namespace convenient
       @[simp] lemma map_add  : f (x + y) = f x + f y := by apply f.2.1
       @[simp] lemma map_smul : f (s • x) = s • f x := by apply f.2.2
       @[simp] lemma map_zero : f (0 : E) = 0 := begin transitivity f ((0 : ℝ) • (0 : E)), simp, rw map_smul, simp, end
+
+      lemma unwrap (f : E⊸F) (x : E) : f x = f.1 x := by simp
+
 
     end function_space_basics
 
@@ -161,5 +167,32 @@ namespace convenient
     end topology
 
   end smooth_linear_map
+
+
+  namespace linear
+
+    variables 
+      {E : Type*} [add_comm_group E] [vector_space ℝ E] [topological_space E] [locally_convex_space ℝ E]
+      {F : Type*} [add_comm_group F] [vector_space ℝ F] [topological_space F] [locally_convex_space ℝ F] 
+      {G : Type*} [add_comm_group G] [vector_space ℝ G] [topological_space G] [locally_convex_space ℝ G] 
+      {H : Type*} [add_comm_group H] [vector_space ℝ H] [topological_space H] [locally_convex_space ℝ H] 
+
+
+    def id : E⊸E := ⟨smooth.id, sorry⟩
+    def fst : E×F⊸E := ⟨smooth.fst, sorry⟩
+    def snd : E×F⊸F := ⟨smooth.snd, sorry⟩
+    def diag : E⊸E×E := ⟨smooth.diag, sorry⟩
+    def forget : (E⊸F)⊸(E⟿F) := ⟨⟨λ f : (E⊸F), (f : E⟿F), /- smoothness -/ sorry⟩, /- linearity -/ sorry⟩
+
+    open smooth_linear_map
+    @[simp] lemma id.apply (x : E) : id x = x := begin unfold id, rw unwrap, simp, end
+    @[simp] lemma fst.apply (p : E×F) : fst p = p.1 := begin unfold fst, rw unwrap, simp, end
+    @[simp] lemma snd.apply (p : E×F) : snd p = p.2 := begin unfold snd, rw unwrap, simp, end
+    @[simp] lemma diag.apply (x : E) : diag x = (x,x) := begin unfold diag, rw unwrap, simp, end
+    @[simp] lemma forget.apply (f : E⊸F) (x : E) : (forget f) x = f x := begin unfold forget, simp, rw unwrap, rw smooth_map.unwrap, sorry end /- What the heck is going on here? Can't be bothered to do it now -/
+
+
+    
+  end linear
 
 end convenient

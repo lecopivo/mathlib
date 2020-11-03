@@ -13,6 +13,14 @@ namespace convenient
     { func := smooth.pair x,
       eq := rfl }
 
+  instance prod.fst.has_smooth_version (x : E×F) : has_smooth_version (prod.fst : E×F→E) := 
+    { func := smooth.fst,
+      eq := rfl }
+
+  instance prod.snd.has_smooth_version (x : E×F) : has_smooth_version (prod.snd : E×F→F) := 
+    { func := smooth.snd,
+      eq := rfl }
+
   instance neg.has_smooth_version (x : E) : has_smooth_version (has_neg.neg : E→E) :=
     { func := smooth.neg,
       eq := rfl }
@@ -20,5 +28,9 @@ namespace convenient
   instance add.arg2.has_smooth_version (x : E) : has_smooth_version (has_add.add x : E→E) :=
     { func := smooth.add x,
       eq := rfl }
+
+  instance forget_linear_to_set : has_smooth_version (has_coe_t_aux.coe : (E⊸F)→(E⟿F)) :=
+    {func := (linear.forget : (E⊸F)⊸(E⟿F)),
+     eq := begin ext, simp, end }
 
 end convenient

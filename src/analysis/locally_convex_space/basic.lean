@@ -2,6 +2,7 @@ import topology.algebra.group
 import topology.algebra.module
 import topology.constructions
 import analysis.normed_space.basic
+import analysis.normed_space.inner_product
 
 structure seminorm (𝕜 : Type*) (E : Type*)
   [normed_field 𝕜] [add_comm_group E] [vector_space 𝕜 E] :=

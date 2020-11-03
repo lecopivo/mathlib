@@ -2,6 +2,8 @@ import analysis.convenient_space.curve
 
 reserve infixr ` ⟿ `:25
 
+noncomputable theory
+
 namespace convenient
 
   --  ___      ___                _   _
@@ -121,7 +123,7 @@ namespace convenient
         {H : Type*} [add_comm_group H] [vector_space ℝ H] [topological_space H] [locally_convex_space ℝ H]
         (f : E⟿F) (g : G⟿H)
 
-        noncomputable def pair_map : E×G⟿F×H := ⟨λ p, (f p.1, g p.2), sorry⟩
+        def pair_map : E×G⟿F×H := ⟨λ p, (f p.1, g p.2), sorry⟩
 
         @[simp] lemma pair_map_apply (p : E×G) : (f.pair_map g) p = (f p.1, g p.2) := rfl
         
@@ -175,19 +177,19 @@ namespace convenient
           (begin intros, ext, simp, abel, end)
 
     /- Mul Action -/
-    noncomputable instance : mul_action ℝ (E⟿F) :=  
+    instance : mul_action ℝ (E⟿F) :=  
       mul_action.mk 
         (begin intros, ext, simp, end)
         (begin intros, ext, simp, rw mul_smul, end)
 
     /- Distrib Mul Action -/
-    noncomputable instance : distrib_mul_action ℝ (E⟿F) := 
+    instance : distrib_mul_action ℝ (E⟿F) := 
       distrib_mul_action.mk 
         (begin intros, ext, simp, rw smul_add, end)
         (begin intros, ext, simp,  end)
 
     /- Semimodule -/
-    noncomputable instance : semimodule ℝ (E⟿F) := 
+    instance : semimodule ℝ (E⟿F) := 
       semimodule.mk 
          (begin intros, ext, simp, rw add_smul, end)
          (begin intros, ext, simp,  end)
@@ -221,15 +223,17 @@ namespace convenient
         {H : Type*} [add_comm_group H] [vector_space ℝ H] [topological_space H] [locally_convex_space ℝ H] 
 
     def id : E⟿E := ⟨id, begin apply prove_smoothness, simp, intros, apply c.2, end⟩
-    noncomputable def fst : E×F⟿E := ⟨prod.fst, begin apply prove_smoothness, intros, sorry, end⟩
-    noncomputable def snd : E×F⟿F := ⟨prod.snd, begin apply prove_smoothness, intros, sorry, end⟩
-    noncomputable def diag : E⟿E×E := ⟨λ x, (x,x), begin apply prove_smoothness, intros, sorry, end⟩
-    noncomputable def assocr : (E×F)×G⟿E×(F×G) := ((fst.comp fst).pair_map (((snd.comp fst).pair_map snd).comp diag)).comp diag /- ugh ?? :D -/
-    noncomputable def assocl : E×(F×G)⟿(E×F)×G := (((fst.pair_map (fst.comp snd)).comp diag).pair_map (snd.comp snd)).comp diag /- ohh !? :O -/
+    def fst : E×F⟿E := ⟨prod.fst, begin apply prove_smoothness, intros, sorry, end⟩
+    def snd : E×F⟿F := ⟨prod.snd, begin apply prove_smoothness, intros, sorry, end⟩
+    def diag : E⟿E×E := ⟨λ x, (x,x), begin apply prove_smoothness, intros, sorry, end⟩
+    def forget : (E⟿F)⟿(E→F) := ⟨λ f, f, begin apply prove_smoothness, simp, intros, unfold coe_fn, unfold function.comp, unfold has_coe_to_fun.coe, simp, sorry, end⟩
 
-    noncomputable def perm.ba : (E×F)⟿(F×E) := (snd.pair_map fst).comp diag
-    noncomputable def perm.ac_bd : (E×F)×(G×H)⟿(E×G)×(F×H) := (assocl).comp $ (id.pair_map (id.pair_map perm.ba)).comp $ (id.pair_map assocr).comp $ (id.pair_map perm.ba).comp $ assocr
-    noncomputable def perm.ad_bc : (E×F)×(G×H)⟿(E×H)×(F×G) := perm.ac_bd.comp $ (id.pair_map perm.ba)
+    def assocr : (E×F)×G⟿E×(F×G) := ((fst.comp fst).pair_map (((snd.comp fst).pair_map snd).comp diag)).comp diag /- ugh ?? :D -/
+    def assocl : E×(F×G)⟿(E×F)×G := (((fst.pair_map (fst.comp snd)).comp diag).pair_map (snd.comp snd)).comp diag /- ohh !? :O -/
+
+    def perm.ba : (E×F)⟿(F×E) := (snd.pair_map fst).comp diag
+    def perm.ac_bd : (E×F)×(G×H)⟿(E×G)×(F×H) := (assocl).comp $ (id.pair_map (id.pair_map perm.ba)).comp $ (id.pair_map assocr).comp $ (id.pair_map perm.ba).comp $ assocr
+    def perm.ad_bc : (E×F)×(G×H)⟿(E×H)×(F×G) := perm.ac_bd.comp $ (id.pair_map perm.ba)
 
     open smooth_map
     @[simp] lemma id.apply (x : E) : id x = x := begin unfold id, rw unwrap, simp, end
